@@ -12,24 +12,24 @@ echo "-- DOCKER BUILD --"
 
 sudo docker compose \
   -f docker-compose.live-environment.yml \
-  --env-file .env.dev \
+  --env-file .env \
   build
 
 echo "-- DOCKER UP --"
 
 sudo docker compose \
   -f docker-compose.live-environment.yml \
-  --env-file .env.dev \
+  --env-file .env \
   up -d 
 
 backendContainer=$(sudo docker compose \
   -f docker-compose.live-environment.yml \
-  --env-file .env.dev \
+  --env-file .env \
   ps -q backend)
 
 # frontendContainer=$(sudo docker compose \
 #   -f docker-compose.live-environment.yml \
-#   --env-file .env.dev \
+#   --env-file .env \
 #   ps -q frontend)
 
 # Basic healthcheck
@@ -42,14 +42,14 @@ if ! /home/devops/infra/scripts/healthcheck.sh "$backendContainerIP"; then
 
   sudo docker compose \
     -f docker-compose.live-environment.yml \
-    --env-file .env.dev \
+    --env-file .env \
     logs backend
 
   #echo "-- DOCKER LOGS FRONTEND --"
 
   #sudo docker compose \
     #-f docker-compose.live-environment.yml \
-    #--env-file .env.dev \
+    #--env-file .env \
     #logs frontend
 
   echo "Healthchecks failed!!! See logs above"
