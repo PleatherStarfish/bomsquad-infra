@@ -7,7 +7,7 @@ COMMIT_SHA=$2
 
 cd "$DEPLOY_DIR"
 
-get fetch
+git fetch
 git reset --hard "$COMMIT_SHA"
 
 echo "-- DOCKER BUILD --"
