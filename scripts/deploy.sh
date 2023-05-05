@@ -3,10 +3,12 @@ set -eou
 set -x
 
 DEPLOY_DIR=$1
+COMMIT_SHA=$2
 
 cd "$DEPLOY_DIR"
 
-git pull
+get fetch
+git reset --hard "$COMMIT_SHA"
 
 echo "-- DOCKER BUILD --"
 
