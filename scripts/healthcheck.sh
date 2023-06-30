@@ -10,8 +10,8 @@ healthcheck() {
   # curl --no-progress-meter --connect-timeout 0.5 --fail "$2:3000"
 }
 
-# Run once every 1s upto 90s
-for _ in $(seq 1 90)
+# Run once every 1s upto 300s
+for _ in $(seq 1 300)
 do
   if healthcheck "$1" > /dev/null 2> /dev/null; then
     break
