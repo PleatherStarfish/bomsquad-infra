@@ -4,14 +4,14 @@ set -e
 healthcheck() {
 
   # backend
-  curl --no-progress-meter --connect-timeout 0.5 --fail "$1:8000"
+  curl --no-progress-meter --connect-timeout 10 --max-time 30 --fail "$1:8000"
 
   # frontend
   # curl --no-progress-meter --connect-timeout 0.5 --fail "$2:3000"
 }
 
-# Run once every 1s upto 300s
-for _ in $(seq 1 300)
+# Run once every 1s upto 7200s
+for _ in $(seq 1 7200)
 do
   if healthcheck "$1" > /dev/null 2> /dev/null; then
     break
