@@ -2,23 +2,22 @@
 set -e
 
 healthcheck() {
-
-  # backend
-  curl --no-progress-meter --connect-timeout 10 --max-time 30 --fail "$1:8000"
-
-  # frontend
-  # curl --no-progress-meter --connect-timeout 0.5 --fail "$2:3000"
+  if curl --no-progress-meter --connect-timeout 10 --max-time 30 --fail "$1:8000"; then
+    echo "Health check succeeded for $1:8000"
+  else
+    echo "Health check failed for $1:8000"
+    exit 1
+  fi
 }
 
-# Run once every 1s upto 7200s
-for _ in $(seq 1 7200)
-do
-  if healthcheck "$1" > /dev/null 2> /dev/null; then
+# Run health check once every second for up to 600 seconds (10 minutes)
+for _ in $(seq 1 600); do
+  if healthcheck "$1"; then
     break
   else
     sleep 1
   fi
 done
 
-# Final attempted, if this fails it fails the script and the deploy should fail
-healthcheck "$1" 
+# Final health check attempt; if this fails, the script will exit with a non-zero status
+healthcheck "$1"
