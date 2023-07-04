@@ -11,7 +11,7 @@ healthcheck() {
 }
 
 # Run health check once every second for up to 600 seconds (10 minutes)
-for _ in $(seq 1 600); do
+for _ in $(seq 1 90); do
   if healthcheck "$1"; then
     break
   else
