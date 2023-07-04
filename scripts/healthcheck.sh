@@ -10,7 +10,7 @@ healthcheck() {
   fi
 }
 
-# Run health check once every second for up to 600 seconds (10 minutes)
+# Run health check once every second for up to 90 seconds
 for _ in $(seq 1 90); do
   if healthcheck "$1"; then
     break
