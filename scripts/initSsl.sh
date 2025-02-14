@@ -7,6 +7,6 @@ sudo chown -R 101:101 /var/www/html
 sudo certbot certonly \
   -d bom-squad.com \
   -d dev.bom-squad.com \
-  --webroot --webroot-path /var/www/html
-
-
+  --webroot --webroot-path /var/www/html \
+  --agree-tos \ 
+  --no-eff-email

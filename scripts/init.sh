@@ -1,54 +1,73 @@
-# as root
-adduser devops 
-passwd devops # set a password
-usermod -a -G sudo devops
+GIT_REPO_REMOTE="git@github.com:chrissound/bomsquad.git"
+GIT_REPO_REMOTE_INFRA="git@github.com:chrissound/bomsquad-infra.git"
 
-# Add the following line to end of sudoers file using 'visudo'
-# devops  ALL = NOPASSWD : ALL
+# -1. Set hostname
+sudo hostnamectl set-hostname bomsquad-production-and-dev
 
-# install docker
+# 1. Setup devops user
+
+# add user and add to sudo group
+sudo useradd -m devops -s /bin/bash
+sudo usermod -aG sudo devops
+
+# Set it to not prompt for password for devops user when using sudo
+echo "devops  ALL = NOPASSWD : ALL" | sudo tee /etc/sudoers.d/devops
+sudo chmod 0440 /etc/sudoers.d/devops
+sudo visudo -c && sudo visudo -c -f /etc/sudoers.d/devops || {
+    echo "ERROR Invalid sudo file"
+    sudo rm /etc/sudoers.d/devops 
+    exit 1
+}
+
+# 2. Install docker
+
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
-# as devops user `su devops`
-
+# 3. Add SSH access to devops user
 mkdir -p ~devops/.ssh/
-echo 'your personal ssh pub goes key here (so you can access this user :) ) ' >>  ~devops/.ssh/authorized_keys
+read -p "Enter your personal SSH public key that can be used to access the devops user: " ssh_key
+echo "$ssh_key" >> ~devops/.ssh/authorized_keys
 
 sudo chmod 600 ~devops/.ssh/authorized_keys
 sudo chown -R devops:devops ~devops/.ssh/
 
-ssh-keygen -t ed25519
+# 4. Setup SSH key for devops user
+sudo su devops 
+ssh-keygen -t ed25519 # accept defaults
 
-# Okay we generated the key, now we need to add this /home/devops/.ssh/id_ed25519.pub key to our application repo so our node can clone down the application repo
+# 5. Ensure 
+# Okay we generated the key, now we need to setup access to the application repo
+# This can be done by adding the just generated public key `/home/devops/.ssh/id_ed25519.pub` to the github application repo (Deploy keys)
+if ! git ls-remote "$GIT_REPO_REMOTE"; then
+  echo "No access to git repo"
+  exit 1
+fi
 
-mkdir -p ~devops/app/{production,dev}/
+# 6. Setup application
+for env in dev production; do
+    mkdir -p ~devops/app/$env
+    cd ~devops/app/$env || exit 1
+    git clone "$GIT_REPO_REMOTE" .
+    git checkout deploy/$env
+done
 
-cd ~devops/app/dev/
-# git@github.com:PleatherStarfish/bomsquad.git .
-git clone https://github.com/PleatherStarfish/bomsquad.git .
-git checkout deploy/dev
+# 7. Setup infra repo
+git clone "$GIT_REPO_REMOTE_INFRA" ~devops/infra
 
-cd ~devops/app/production
-#git@github.com:PleatherStarfish/bomsquad.git .
-git clone https://github.com/PleatherStarfish/bomsquad.git .
-git checkout deploy/production
 
-mkdir ~devops/infra
-cd ~devops/infra/
-git clone https://github.com/PleatherStarfish/bomsquad-infra.git .
-
+# 8. Setup infra nginx
 cd ~devops/infra/nginx-proxy/
 cp default.pressl.conf default.conf
 sudo docker compose up -d 
 
-/home/devops/infra/initSsl.sh
+~devops/infra/scripts/initSsl.sh
 
 git checkout -- default.conf
 
 sudo docker compose restart
 
-# You need to configure the DB potentially:
+# 9. You need to configure the DB potentially:
 #```
 # GRANT USAGE ON SCHEMA public TO dev;
 # GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO dev;
@@ -62,3 +81,18 @@ sudo docker compose restart
 # GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO production;
 # GRANT ALL ON schema public TO production;
 #```
+
+# 10. Create the .env file in ~/app/{dev,production}
+
+# 11. Create devops SSH private key (private key will be held with github actions)
+ssh-keygen -t ed25519 -f devops
+echo "SSH_PRIV_KEY:"
+cat devops | base64 -w 0
+echo "SSH public key to .ssh/authorized_keys:"
+cat devops.pub
+
+# Setup `SSH_PRIV_KEY` secret in github actions in app repo (base64 encoded - `| base64 -w 0`)
+# Copy the devops.pub to ~devops/.ssh/authorized_keys
+
+# 12. Trigger a deploy from github actions
+# This can be done by adding a new commit to `dev/deploy`
