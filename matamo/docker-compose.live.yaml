@@ -16,7 +16,7 @@ services:
     ports:
       - 3306:3306
   app:
-    image: matomo:5.1.0-fpm
+    image: matomo:5.2.2-fpm
     restart: always
     links:
       - db
