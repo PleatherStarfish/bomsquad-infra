@@ -17,3 +17,11 @@ sudo certbot certonly \
   -d matomo.bom-squad.com \
   --webroot --webroot-path /var/www/html \
   --agree-tos 
+
+
+sudo cp nginx-proxy/nginx-daily-reload.service /etc/systemd/system/nginx-daily-reload.service
+sudo cp nginx-proxy/nginx-daily-reload.timer /etc/systemd/system/nginx-daily-reload.timer
+
+sudo systemctl daemon-reload
+sudo systemctl enable nginx-daily-reload.timer
+sudo systemctl start nginx-daily-reload.timer
