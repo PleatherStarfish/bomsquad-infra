@@ -1,0 +1,12 @@
+[Unit]
+Description=Reload Nginx in Docker Containers
+After=docker.service
+
+[Service]
+Type=oneshot
+
+# Reload Nginx in the nginx-front-ingress container
+ExecStart=/usr/bin/docker exec nginx-front-ingress nginx -s reload
+
+[Install]
+WantedBy=multi-user.target

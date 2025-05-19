@@ -1,0 +1,12 @@
+[Unit]
+Description=Reload Nginx daily
+Requires=nginx-daily-reload.service
+
+[Timer]
+Unit=nginx-daily-reload.service
+OnCalendar=*-*-* 04:30:00
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
